@@ -73,19 +73,34 @@ export const defaultTableOptions: IDefaultTablePluginProps = {
 /**
  * Plugin to convert Markdown tables (MDAST) to DOCX with support for rich formatting and seamless integration into mdast2docx.
  */
-export const tablePlugin: (options?: ITablePluginProps) => IPlugin = options => {
+export const tablePlugin: (options?: ITablePluginProps) => IPlugin = (
+  options
+) => {
   return {
-    block: (docx, node, _paraProps, _blockChildrenProcessor, inlineChildrenProcessor) => {
+    block: (
+      docx,
+      node,
+      _paraProps,
+      _blockChildrenProcessor,
+      inlineChildrenProcessor
+    ) => {
       if (node.type !== "table") return [];
 
       const { Table, TableRow, TableCell, Paragraph } = docx;
 
-      const { tableProps, firstRowProps, firstRowCellProps, rowProps, cellProps, alignments } = {
+      const {
+        tableProps,
+        firstRowProps,
+        firstRowCellProps,
+        rowProps,
+        cellProps,
+        alignments,
+      } = {
         ...defaultTableOptions,
         ...options,
       };
 
-      const align = (node.align as (string | null)[] | null)?.map(a => {
+      const align = (node.align as (string | null)[] | null)?.map((a) => {
         switch (a) {
           case "left":
             return docx.AlignmentType.LEFT;
@@ -125,7 +140,16 @@ export const tablePlugin: (options?: ITablePluginProps) => IPlugin = options => 
       const rows = node.children.map(createRow);
       // @ts-expect-error - Setting type to empty string to avoid re-processing the node.
       node.type = "";
-      return [new Table({ ...tableProps, rows })];
+      return [
+        new Table({
+          ...tableProps,
+          columnWidths: Array.from(
+            { length: node.children[0].children.length },
+            () => 8500 / node.children[0].children.length
+          ),
+          rows,
+        }),
+      ];
     },
   };
 };
